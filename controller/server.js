@@ -81,11 +81,11 @@ app.get("/stats", (req, res) => {
 
 io.on("connect", (socket) => {
 	io.to(socket.id).emit("update_countdown", countdown);
-	if (stats_ready) {
-		io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
-	} else {
-		setTimeout(() => io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]), 5000);
-	}
+	// if (stats_ready) {
+	// 	io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+	// } else {
+	// 	setTimeout(() => io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]), 5000);
+	// }
 
 	if (socket.request["headers"]["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
 		console.log(`other localhost node server (${socket.request["headers"]["app"]}) connected as client`);
