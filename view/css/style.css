@@ -1,0 +1,143 @@
+@import url("https://fonts.googleapis.com/css?family=Poppins");
+
+html {
+	position: relative;
+	min-height: 100%;
+}
+
+body {
+	font-family: "Poppins", sans-serif;
+	color: white;
+	background: rgb(43, 43, 43);
+	margin: 0 0 75px 0; /* bottom px changes space from end of content to start of footer */
+}
+
+body::-webkit-scrollbar {
+	width: 16px;
+}
+
+body::-webkit-scrollbar-track {
+	background: rgb(43, 43, 43);
+}
+
+body::-webkit-scrollbar-thumb {
+	background: rgb(80, 80, 80);
+	border: 5px solid rgb(43, 43, 43);
+	border-radius: 16px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+	border: 3px solid rgb(43, 43, 43);
+}
+
+footer {
+	position: absolute;
+	bottom: 10px; /* space from bottom */
+	width: 100%;
+}
+
+a {
+	color: rgb(113, 142, 183);
+}
+
+a:hover {
+	text-decoration: underline;
+	color: rgb(113, 142, 183);
+}
+
+a:visited {
+	color: rgb(169, 110, 110);
+}
+
+th {
+	width: 33%;
+}
+
+.boxed {
+	border: 1px solid rgb(200, 200, 200);
+}
+
+.monospace {
+	font-family: monospace, sans-serif;
+}
+
+.dropdown-toggle {
+	color: rgb(113, 142, 183);
+}
+
+.dropdown-toggle:focus {
+	color: white;
+	box-shadow: none;
+}
+
+.font_size_10 {
+	font-size: 10px;
+}
+
+#dropright_menu {
+	background: white;
+	min-width: 9rem;
+}
+
+#dropdown_menu {
+	left: 50%;
+	right: auto;
+	transform: translate(-50%, 0);
+	border-bottom: 15px solid rgb(43, 43, 43);
+	border-radius: 0;
+	width: 180px;
+}
+
+#big_box {
+	border: 2px solid rgb(200, 200, 200);
+}
+
+#terminal {
+	height: 120px;
+	width: auto;
+	background: rgb(80, 80, 80);
+	border-radius: 5px;
+	padding: 10px;
+	overflow: hidden;
+	overflow-y: scroll;
+	color: white;
+	font-family: monospace, sans-serif;
+}
+
+#terminal::-webkit-scrollbar {
+	width: 12px;
+}
+
+#terminal::-webkit-scrollbar-track {
+	background: rgb(80, 80, 80);
+	border-radius: 5px;
+}
+
+#terminal::-webkit-scrollbar-thumb {
+	background: rgb(43, 43, 43);
+	border: 3px solid rgb(80, 80, 80);
+	border-radius: 12px;
+}
+
+#terminal::-webkit-scrollbar-thumb:hover {
+	border: 2px solid rgb(80, 80, 80);
+}
+
+#blinking_caret {
+	font-weight: 100;
+	color: white;
+	animation: 1s blink step-end infinite;
+}
+@keyframes blink {
+	0% {color: transparent;}
+	50% {color: white;}
+}
+
+#github_large {
+	font-size: 60px;
+	color: rgb(60, 60, 60);
+}
+
+#github_large:hover {
+	color: rgb(120, 120, 120);
+}
