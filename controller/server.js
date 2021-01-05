@@ -94,13 +94,17 @@ io.on("connect", (socket) => {
 
 		sql_operations.add_visit();
 
-		switch (socket.request["headers"]["referer"].split(`localhost:${port}`).pop()) {
+		switch (socket.request["headers"]["referer"].split(socket.request["headers"]["host"]).pop()) {
 			case "/":
 				let ip = null;
 				if (config == "dev") {
 					ip = secrets.ip_address;
 				} else if (config == "prod") {
-					ip = socket.handshake.address;
+					if ("x-forwarded-for" in socket.request["headers"]) {
+						ip = socket.handshake["headers"]["x-forwarded-for"];
+					} else {
+						((socket.handshake.address.slice(0, 7) == "::ffff:") ? ip = socket.handshake.address.split(":").pop() : ip = socket.handshake.address);
+					}
 				}
 				console.log(ip);
 			
