@@ -59,21 +59,24 @@ app.engine("handlebars", exp_hbs({
 app.get(["/"], (req, res) => {
 	res.render("index.handlebars", {
 		title: "dev portfolio — j9108c",
-		description: "dev portfolio"
+		description: "dev portfolio",
+		href_prefixes: href_prefixes
 	});
 });
 
 app.get("/apps", (req, res) => {
 	res.render("apps.handlebars", {
 		title: "apps — j9108c",
-		description: "apps"
+		description: "apps",
+		href_prefixes: href_prefixes
 	});
 });
 
 app.get("/stats", (req, res) => {
 	res.render("stats.handlebars", {
 		title: "stats — j9108c",
-		description: "stats"
+		description: "stats",
+		href_prefixes: href_prefixes
 	});
 });
 
@@ -87,6 +90,8 @@ io.on("connect", (socket) => {
 
 	if (socket.request["headers"]["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
 		console.log(`other localhost node server (${socket.request["headers"]["app"]}) connected as client`);
+
+		io.to(socket.id).emit("store_href_prefixes", href_prefixes);
 	} else {
 		console.log(`socket connected: ${socket.id}`);
 
@@ -136,6 +141,21 @@ io.on("connect", (socket) => {
 		}
 	}
 });
+
+// set href prefixes for dynamic html hrefs
+let href_prefixes = null;
+if (config == "dev") {
+	href_prefixes = {
+		1025: "http://localhost:1025",
+		2000: "http://localhost:2000"
+	};
+} else if (config == "prod") {
+	href_prefixes = {
+		// http on purpose, for testing before ssl. after ssl, auto redirects to https
+		1025: "http://j9108c.com",
+		2000: "http://j9108c.com"
+	};
+}
 
 // port and listen
 const port = process.env.PORT || 1025;
