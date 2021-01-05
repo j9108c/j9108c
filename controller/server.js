@@ -25,10 +25,8 @@ sql_operations.set_client(config);
 sql_operations.connect_to_db().then(() => sql_operations.init_db(config)).catch((error) => console.error(error));
 
 let stats = null;
-let stats_ready = false;
 cloudflare_stats.store_domain_request_info().then(() => {
 	stats = cloudflare_stats.get_domain_request_info();
-	stats_ready = true;
 }).catch((error) => console.error(error));
 
 let countdown = 30;
@@ -81,11 +79,11 @@ app.get("/stats", (req, res) => {
 
 io.on("connect", (socket) => {
 	io.to(socket.id).emit("update_countdown", countdown);
-	// if (stats_ready) {
-	// 	io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
-	// } else {
-	// 	setTimeout(() => io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]), 5000);
-	// }
+	if (stats != null) {
+		io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+	} else {
+		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]) : null), 5000);
+	}
 
 	if (socket.request["headers"]["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
 		console.log(`other localhost node server (${socket.request["headers"]["app"]}) connected as client`);
