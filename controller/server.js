@@ -93,6 +93,7 @@ io.on("connect", (socket) => {
 		io.to(socket.id).emit("store_hosts", hosts);
 	} else {
 		console.log(`socket connected: ${socket.id}`);
+		console.log(socket.request["headers"]);
 
 		sql_operations.add_visit();
 
@@ -102,8 +103,8 @@ io.on("connect", (socket) => {
 				if (config == "dev") {
 					ip = secrets.ip_address;
 				} else if (config == "prod") {
-					if ("x-forwarded-for" in socket.request["headers"]) {
-						ip = socket.handshake["headers"]["x-forwarded-for"];
+					if ("x-forwarded-for" in socket.request["headers"]) { // from nginx reverse proxy
+						ip = socket.handshake["headers"]["x-forwarded-for"].split(", ")[0];
 					} else {
 						((socket.handshake.address.slice(0, 7) == "::ffff:") ? ip = socket.handshake.address.split(":").pop() : ip = socket.handshake.address);
 					}
