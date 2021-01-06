@@ -79,6 +79,10 @@ th {
 	font-size: 10px;
 }
 
+.pipe {
+	color: rgb(200, 200, 200);
+}
+
 #dropright_menu {
 	background: white;
 	min-width: 9rem;
