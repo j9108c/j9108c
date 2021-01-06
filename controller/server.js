@@ -45,10 +45,12 @@ setInterval(() => {
 	}).catch((error) => console.error(error));
 }, 30000); // 30s
 
+const index = ""; // index of this server relative to domain. use as project root for non-html static file links in handlebars html
+
 const app = express();
 const server = http.createServer(app);
-const io = socket_io(server);
-app.use(express.static(`${project_root}/view`));
+const io = socket_io(server, {path: `${index}/socket.io`});
+app.use(`${index}/view`, express.static(`${project_root}/view`));
 app.set("views", `${project_root}/view/html`);
 app.set("view engine", "handlebars");
 app.engine("handlebars", exp_hbs({
@@ -56,27 +58,24 @@ app.engine("handlebars", exp_hbs({
 	defaultLayout: "template.handlebars"
 }));
 
-app.get(["/"], (req, res) => {
+app.get(index, (req, res) => {
 	res.render("index.handlebars", {
 		title: "dev portfolio — j9108c",
-		description: "dev portfolio",
-		href_prefixes: href_prefixes
+		description: "dev portfolio"
 	});
 });
 
-app.get("/apps", (req, res) => {
+app.get(`${index}/apps`, (req, res) => {
 	res.render("apps.handlebars", {
 		title: "apps — j9108c",
-		description: "apps",
-		href_prefixes: href_prefixes
+		description: "apps"
 	});
 });
 
-app.get("/stats", (req, res) => {
+app.get(`${index}/stats`, (req, res) => {
 	res.render("stats.handlebars", {
 		title: "stats — j9108c",
-		description: "stats",
-		href_prefixes: href_prefixes
+		description: "stats"
 	});
 });
 
@@ -91,7 +90,7 @@ io.on("connect", (socket) => {
 	if (socket.request["headers"]["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
 		console.log(`other localhost node server (${socket.request["headers"]["app"]}) connected as client`);
 
-		io.to(socket.id).emit("store_href_prefixes", href_prefixes);
+		io.to(socket.id).emit("store_hosts", hosts);
 	} else {
 		console.log(`socket connected: ${socket.id}`);
 
@@ -142,20 +141,24 @@ io.on("connect", (socket) => {
 	}
 });
 
-// set href prefixes for dynamic html hrefs
-let href_prefixes = null;
+// set hosts var for dynamic html hrefs wrt launch config
+let hosts = null;
 if (config == "dev") {
-	href_prefixes = {
+	hosts = {
 		1025: "http://localhost:1025",
 		2000: "http://localhost:2000"
 	};
 } else if (config == "prod") {
-	href_prefixes = {
+	hosts = {
 		// http on purpose, for testing before ssl. after ssl, auto redirects to https
 		1025: "http://j9108c.com",
 		2000: "http://j9108c.com"
 	};
 }
+
+// set app local vars (auto passed as data to all hbs renders)
+app.locals.index = index;
+app.locals.hosts = hosts;
 
 // port and listen
 const port = process.env.PORT || 1025;

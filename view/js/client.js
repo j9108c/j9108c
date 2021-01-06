@@ -1,4 +1,5 @@
-const socket = io(); // triggers controller's io.on connect
+let index = null;
+const socket = io({path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`}); // triggers controller's io.on connect
 
 const terminal = document.getElementById("terminal");
 const messages = document.getElementById("messages");
