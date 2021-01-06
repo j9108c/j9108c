@@ -93,51 +93,48 @@ io.on("connect", (socket) => {
 		io.to(socket.id).emit("store_hosts", hosts);
 	} else {
 		console.log(`socket connected: ${socket.id}`);
-		console.log(socket.request["headers"]);
-
 		sql_operations.add_visit();
 
-		switch (socket.request["headers"]["referer"].split(socket.request["headers"]["host"]).pop()) {
-			case "/":
-				let ip = null;
-				if (config == "dev") {
-					ip = secrets.ip_address;
-				} else if (config == "prod") {
-					if ("x-forwarded-for" in socket.request["headers"]) { // from nginx reverse proxy
-						ip = socket.handshake["headers"]["x-forwarded-for"].split(", ")[0];
-					} else {
-						((socket.handshake.address.slice(0, 7) == "::ffff:") ? ip = socket.handshake.address.split(":").pop() : ip = socket.handshake.address);
-					}
+		console.log(socket.request["headers"]);
+		const urlpath = socket.request["headers"]["referer"].split(socket.request["headers"]["host"]).pop();
+		console.log(urlpath);
+		
+		// conditional based on urlpath (i.e., everything in the url after the domain) prefixes rather than exact urlpath. this is to account for sites adding their own queries to the url, like fb does with their "?fbclid"
+		if (urlpath.startsWith("/apps")) {
+			null;
+		} else if (urlpath.startsWith("/stats")) {
+			null;
+		} else { // index
+			let ip = null;
+			if (config == "dev") {
+				ip = secrets.ip_address;
+			} else if (config == "prod") {
+				if ("x-forwarded-for" in socket.request["headers"]) { // from nginx reverse proxy
+					ip = socket.handshake["headers"]["x-forwarded-for"].split(", ")[0];
+				} else {
+					((socket.handshake.address.slice(0, 7) == "::ffff:") ? ip = socket.handshake.address.split(":").pop() : ip = socket.handshake.address);
 				}
-				console.log(ip);
-			
-				axios.get(`http://ip-api.com/json/${ip}?fields=status,city,timezone`).then((response) => {
-					const city = response.data["city"].toLowerCase();
-					console.log(city);
-					const timezone = response.data["timezone"];
-					console.log(timezone);
+			}
+			console.log(ip);
 		
-					setTimeout(() => {
-						io.to(socket.id).emit("message", `greetings, ${ip} @ ${city} !`);
-					}, 2000);
-		
-					setTimeout(() => {
-						io.to(socket.id).emit("message", "welcome to my dev portfolio !");
-					}, 2500);
-		
-					setTimeout(() => {
-						io.to(socket.id).emit("datetime", timezone);
-					}, 3000);
-				}).catch((error) => console.error(error));
-				break;
-			case "/apps":
+			axios.get(`http://ip-api.com/json/${ip}?fields=status,city,timezone`).then((response) => {
+				const city = response.data["city"].toLowerCase();
+				console.log(city);
+				const timezone = response.data["timezone"];
+				console.log(timezone);
 	
-				break;
-			case "/stats":
+				setTimeout(() => {
+					io.to(socket.id).emit("message", `greetings, ${ip} @ ${city} !`);
+				}, 2000);
 	
-				break;
-			default:
-				break;
+				setTimeout(() => {
+					io.to(socket.id).emit("message", "welcome to my dev portfolio !");
+				}, 2500);
+	
+				setTimeout(() => {
+					io.to(socket.id).emit("datetime", timezone);
+				}, 3000);
+			}).catch((error) => console.error(error));
 		}
 	}
 });
