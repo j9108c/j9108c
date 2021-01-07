@@ -20,12 +20,10 @@ dropdown_button.addEventListener("click", (event) => {
 	setTimeout(() => dropdown_menu.scrollIntoView({behavior: "smooth"}), 250);
 });
 
-socket.on("check_dev_mobile", (socket_address, dev_private_ip) => {
-	if (socket_address == dev_private_ip) { // dev mobile
-		const all_a_tags = document.getElementsByTagName("a");
+socket.on("replace localhost with dev private ip", (dev_private_ip) => {
+	const all_a_tags = document.getElementsByTagName("a");
 
-		[...all_a_tags].forEach((a_tag) => a_tag.href = a_tag.href.replace("localhost", dev_private_ip));
-	}
+	[...all_a_tags].forEach((a_tag) => a_tag.href = a_tag.href.replace("localhost", dev_private_ip));
 });
 
 socket.on("message", (message) => {
@@ -51,7 +49,7 @@ socket.on("datetime", (timezone) => {
 	add_blinking_caret();
 });
 
-socket.on("update_domain_request_info", (today_total, last7days_total, last30days_total, today_countries, last7days_countries, last30days_countries) => {
+socket.on("update domain request info", (today_total, last7days_total, last30days_total, today_countries, last7days_countries, last30days_countries) => {
 	[...today_total_wrappers].forEach((today_total_wrapper) => today_total_wrapper.innerHTML = today_total);
 	[...last7days_total_wrappers].forEach((last7days_total_wrapper) => last7days_total_wrapper.innerHTML = last7days_total);
 	[...last30days_total_wrappers].forEach((last30days_total_wrapper) => last30days_total_wrapper.innerHTML = last30days_total);
@@ -75,7 +73,7 @@ socket.on("update_domain_request_info", (today_total, last7days_total, last30day
 	}
 });
 
-socket.on("update_countdown", (countdown) => {
+socket.on("update countdown", (countdown) => {
 	[...countdown_wrappers].forEach((countdown_wrapper) => countdown_wrapper.innerHTML = countdown);
 });
 

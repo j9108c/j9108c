@@ -31,7 +31,7 @@ cloudflare_stats.store_domain_request_info().then(() => {
 
 let countdown = 30;
 setInterval(() => {
-	io.emit("update_countdown", countdown-=1);
+	io.emit("update countdown", countdown-=1);
 	if (countdown == 0) {
 		countdown = 30;
 		console.log("countdown reset");
@@ -41,7 +41,7 @@ setInterval(() => {
 	cloudflare_stats.store_domain_request_info().then(() => {
 		console.log("stored domain request info");
 		stats = cloudflare_stats.get_domain_request_info();
-		io.emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+		io.emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
 	}).catch((error) => console.error(error));
 }, 30000); // 30s
 
@@ -80,11 +80,11 @@ app.get(`${index}/stats`, (req, res) => {
 });
 
 io.on("connect", (socket) => {
-	io.to(socket.id).emit("update_countdown", countdown);
+	io.to(socket.id).emit("update countdown", countdown);
 	if (stats != null) {
-		io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+		io.to(socket.id).emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
 	} else {
-		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update_domain_request_info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]) : null), 5000);
+		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]) : null), 5000);
 	}
 
 	const headers = socket.request["headers"];
@@ -92,12 +92,13 @@ io.on("connect", (socket) => {
 	if (headers["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
 		console.log(`other localhost node server (${headers["app"]}) connected as client`);
 
-		io.to(socket.id).emit("store_hosts", hosts);
+		io.to(socket.id).emit("store hosts", hosts);
 	} else {
 		console.log(`socket connected: ${socket.id}`);
 
-		io.to(socket.id).emit("check_dev_mobile", headers["host"].split(":")[0], secrets.dev_private_ip);
-		
+		const socket_address = headers["host"].split(":")[0];
+		((socket_address == secrets.dev_private_ip) ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
+
 		sql_operations.add_visit();
 
 		const urlpath = headers["referer"].split(headers["host"]).pop();
