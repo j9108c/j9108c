@@ -109,7 +109,7 @@ function update_datetime(timezone) {
 	const day = ("0" + dt.getDate()).slice(-2);
 	const month = ("0" + (dt.getMonth()+1)).slice(-2);
 	const year = dt.getFullYear();
-	const hour = ("0" + dt.getHours()).slice(-2);
+	const hour = ((dt.getHours() > 12) ? ("0" + (dt.getHours()-12)).slice(-2) : ("0" + dt.getHours()).slice(-2));
 	const minute = ("0" + dt.getMinutes()).slice(-2);
 	const second = ("0" + dt.getSeconds()).slice(-2);
 
