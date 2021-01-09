@@ -87,7 +87,7 @@ io.on("connect", (socket) => {
 		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]) : null), 5000);
 	}
 
-	const headers = socket.request["headers"];
+	const headers = socket.handshake["headers"];
 	// console.log(headers);
 	if (headers["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
 		console.log(`other localhost node server (${headers["app"]}) connected as client`);
@@ -102,7 +102,7 @@ io.on("connect", (socket) => {
 		sql_operations.add_visit();
 
 		const urlpath = headers["referer"].split(headers["host"]).pop();
-		console.log(urlpath);
+		// console.log(urlpath);
 		// conditional based on urlpath (i.e., everything in the url after the domain) prefixes rather than exact urlpath. this is to account for sites adding their own queries to the url, like fb does with their "?fbclid"
 		if (urlpath.startsWith("/apps")) {
 			null;
@@ -114,9 +114,9 @@ io.on("connect", (socket) => {
 				ip = secrets.dev_public_ip;
 			} else if (config == "prod") {
 				if ("x-forwarded-for" in headers) { // from nginx reverse proxy
-					ip = socket.handshake["headers"]["x-forwarded-for"].split(", ")[0];
+					ip = headers["x-forwarded-for"].split(", ")[0];
 				} else {
-					((socket.handshake.address.slice(0, 7) == "::ffff:") ? ip = socket.handshake.address.split(":").pop() : ip = socket.handshake.address);
+					ip = ((socket.handshake.address.slice(0, 7) == "::ffff:") ? socket.handshake.address.split(":").pop() : socket.handshake.address);
 				}
 			}
 			console.log(ip);

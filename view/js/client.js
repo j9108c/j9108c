@@ -15,6 +15,43 @@ const countdown_wrappers = document.getElementsByClassName("countdown_wrapper");
 const today_table_body_wrapper = document.getElementById("today_table_body_wrapper");
 const last7days_table_body_wrapper = document.getElementById("last7days_table_body_wrapper");
 const last30days_table_body_wrapper = document.getElementById("last30days_table_body_wrapper");
+const all_elements = document.getElementsByTagName("*");
+
+let light_mode_preference = null;
+if (document.cookie != "") {
+	light_mode_preference = document.cookie.split("; ").find((cookie) => cookie.startsWith("light_mode")).split("=")[1];
+
+	if (light_mode_preference == "on") {
+		[...all_elements].forEach((element) => element.classList.add("light_mode"));
+
+		if (document.title == "stats — j9108c") {
+			const tables = document.getElementsByClassName("table");
+			[...tables].forEach((table) => {
+				table.classList.remove("table-dark");
+				table.classList.add("table-secondary");
+			});
+		}
+	}
+}
+if (document.title == "dev portfolio — j9108c") { // index
+	const light_mode_button = document.getElementById("light_mode_button");
+
+	light_mode_button.addEventListener("click", (event) => {
+		if (document.cookie == "") {
+			document.cookie = "light_mode=on";
+			document.cookie = "max-age=60*60*24*365*9999";
+		} else {
+			if (light_mode_preference == "on") {
+				document.cookie = "light_mode=off";
+			} else if (light_mode_preference == "off") {
+				document.cookie = "light_mode=on";
+			}
+		}
+
+		document.body.style.transition = "background-color 0.5s";
+		[...all_elements].forEach((element) => element.classList.toggle("light_mode"));
+	});
+}
 
 dropdown_button.addEventListener("click", (event) => {
 	setTimeout(() => dropdown_menu.scrollIntoView({behavior: "smooth"}), 250);
