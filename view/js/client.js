@@ -43,8 +43,10 @@ if (document.title == "dev portfolio — j9108c") { // index
 		} else {
 			if (light_mode_preference == "on") {
 				document.cookie = "light_mode=off";
+				light_mode_preference = "off";
 			} else if (light_mode_preference == "off") {
 				document.cookie = "light_mode=on";
+				light_mode_preference = "on";
 			}
 		}
 
