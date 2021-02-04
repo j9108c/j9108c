@@ -148,13 +148,15 @@ let hosts = null;
 if (config == "dev") {
 	hosts = {
 		1025: "http://localhost:1025",
-		2000: "http://localhost:2000"
+		2000: "http://localhost:2000",
+		3000: "http://localhost:3000"
 	};
 } else if (config == "prod") {
 	hosts = {
 		// http on purpose, for testing before ssl. after ssl, auto redirects to https
 		1025: "http://j9108c.com",
-		2000: "http://j9108c.com"
+		2000: "http://j9108c.com",
+		3000: "http://j9108c.com"
 	};
 }
 
