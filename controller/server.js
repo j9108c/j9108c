@@ -88,9 +88,8 @@ io.on("connect", (socket) => {
 	}
 
 	const headers = socket.handshake["headers"];
-	// console.log(headers);
 	if (headers["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
-		console.log(`other localhost node server (${headers["app"]}) connected as client`);
+		console.log(`other localhost server (${headers["app"]}) connected as client`);
 
 		io.to(socket.id).emit("store hosts", hosts);
 	} else {
@@ -166,4 +165,4 @@ app.locals.hosts = hosts;
 
 // port and listen
 const port = process.env.PORT || 1025;
-server.listen(port, () => console.log(`server started on localhost:${port}`));
+server.listen(port, () => console.log(`(j9108c) server started on localhost:${port}`));
