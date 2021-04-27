@@ -41,7 +41,7 @@ setInterval(() => {
 	cloudflare_stats.store_domain_request_info().then(() => {
 		console.log("stored domain request info");
 		stats = cloudflare_stats.get_domain_request_info();
-		io.emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+		io.emit("update domain request info", stats);
 	}).catch((error) => console.error(error));
 }, 30000); // 30s
 
@@ -82,9 +82,9 @@ app.get(`${index}/stats`, (req, res) => {
 io.on("connect", (socket) => {
 	io.to(socket.id).emit("update countdown", countdown);
 	if (stats != null) {
-		io.to(socket.id).emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+		io.to(socket.id).emit("update domain request info", stats);
 	} else {
-		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update domain request info", stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]) : null), 5000);
+		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update domain request info", stats) : null), 5000);
 	}
 
 	const headers = socket.handshake["headers"];

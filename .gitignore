@@ -1,9 +1,9 @@
-# keep
-!.git
-!.gitignore
-
 # ignore
 **/#*
 **/.*
 **/_*
 node_modules
+
+# keep
+!.git
+!.gitignore
