@@ -1,5 +1,5 @@
 let index = null;
-const socket = io({path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`}); // triggers controller's io.on connect
+const socket = io({path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`}); // triggers server's io.on connect
 
 const terminal = document.getElementById("terminal");
 const messages = document.getElementById("messages");
@@ -63,6 +63,10 @@ socket.on("replace localhost with dev private ip", (dev_private_ip) => {
 	const all_a_tags = document.getElementsByTagName("a");
 
 	[...all_a_tags].forEach((a_tag) => a_tag.href = a_tag.href.replace("localhost", dev_private_ip));
+});
+
+socket.on("clear terminal", () => {
+	messages.innerHTML = "<p id='gt_sign'>> <span id='blinking_caret'>|</span></p>";
 });
 
 socket.on("message", (message) => {
@@ -161,7 +165,11 @@ function update_datetime(timezone) {
 
 	const formatted_dt = `${day}-${month}-${year} ${hour}:${minute}:${second} ${period} ${tz_short}`;
 	
-	document.getElementById("datetime").innerHTML = `> info: ${formatted_dt}`;
+	try {
+		document.getElementById("datetime").innerHTML = `> info: ${formatted_dt}`;
+	} catch {
+		null;
+	}
 }
 
 function list_domain_request_info(countries_array, parent_ul) {

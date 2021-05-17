@@ -1,9 +1,5 @@
 let config = null;
-if (process.argv[0].slice(0, 13) == "/home/j9108c/") {
-	config = "dev";
-} else {
-	config = "prod";
-}
+((process.argv[0].slice(0, 13) == "/home/j9108c/") ? config = "dev" : config = "prod");
 console.log(config);
 
 let project_root = __dirname.split("/");
@@ -92,6 +88,8 @@ io.on("connect", (socket) => {
 		console.log(`other localhost server (${headers["app"]}) connected as client`);
 
 		io.to(socket.id).emit("store hosts", hosts);
+
+		io.to(socket.id).emit("store dev private ip", secrets.dev_private_ip);
 	} else {
 		console.log(`socket connected: ${socket.id}`);
 
@@ -108,6 +106,8 @@ io.on("connect", (socket) => {
 		} else if (urlpath.startsWith("/stats")) {
 			null;
 		} else { // index
+			io.to(socket.id).emit("clear terminal");
+
 			let ip = null;
 			if (config == "dev") {
 				ip = secrets.dev_public_ip;
