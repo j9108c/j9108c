@@ -30,37 +30,39 @@ const config = {
 	}
 };
 
-function get_requests_by_country(range) {
-	return new Promise((resolve, reject) => {
-		set_dates(range);
+async function get_requests_by_country(range) {
+	set_dates(range);
 
-		data = {
-			query: `
-				query {
-					viewer {
-						zones(filter: {zoneTag: "${secrets.cloudflare_zone_id}"}) {
-							httpRequests1dGroups(limit: 10000, filter: {date_geq: "${from}", date_leq: "${to}"}) {
-								sum {
-									countryMap {
-										clientCountryName
-										requests
-									}
+	data = {
+		query: `
+			query {
+				viewer {
+					zones(filter: {zoneTag: "${secrets.cloudflare_zone_id}"}) {
+						httpRequests1dGroups(limit: 10000, filter: {date_geq: "${from}", date_leq: "${to}"}) {
+							sum {
+								countryMap {
+									clientCountryName
+									requests
 								}
 							}
 						}
 					}
 				}
-			`
-		};
-	
-		axios.post(url, data, config).then((response) => {
-			if (response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"].length == 0) { // no requests
-				resolve([]);
-			} else {
-				resolve(response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"][0]["sum"]["countryMap"].sort((a, b) => b.requests - a.requests)); // sort by number of requests, descending
 			}
-		}).catch((err) => reject(console.error(err)));
-	});
+		`
+	};
+
+	try {
+		const response = await axios.post(url, data, config);
+
+		if (response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"].length == 0) { // no requests
+			return [];
+		} else {
+			return response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"][0]["sum"]["countryMap"].sort((a, b) => b.requests - a.requests); // sort by number of requests, descending
+		}
+	} catch (err) {
+		console.error(err);
+	}
 }
 
 let today_total = null;
@@ -71,11 +73,11 @@ let last7days_countries = null;
 let last30days_countries = null;
 
 async function store_domain_request_info() {
-	today_countries = await get_requests_by_country("today");
-	last7days_countries = await get_requests_by_country("last7days");
-	last30days_countries = await get_requests_by_country("last30days");
+	try {
+		today_countries = await get_requests_by_country("today");
+		last7days_countries = await get_requests_by_country("last7days");
+		last30days_countries = await get_requests_by_country("last30days");
 
-	return new Promise((resolve, reject) => {
 		today_total = 0;
 		last7days_total = 0;
 		last30days_total = 0;
@@ -83,9 +85,11 @@ async function store_domain_request_info() {
 		today_countries.forEach((country) => today_total += country["requests"]);
 		last7days_countries.forEach((country) => last7days_total += country["requests"]);
 		last30days_countries.forEach((country) => last30days_total += country["requests"]);
-	
-		resolve(console.log("stored domain request info"));
-	});
+
+		console.log("stored domain request info");
+	} catch (err) {
+		console.error(err);
+	}
 }
 
 function get_domain_request_info() {
