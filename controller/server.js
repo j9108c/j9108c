@@ -12,18 +12,16 @@ const sql_operations = require(`${project_root}/model/sql_operations.js`);
 const cloudflare_stats = require(`${project_root}/model/cloudflare_stats.js`);
 
 const express = require("express");
-const exp_hbs = require("express-handlebars");
+const express_hbs = require("express-handlebars");
 const http = require("http");
 const socket_io = require("socket.io");
 const axios = require("axios");
 
 sql_operations.set_client(config);
-sql_operations.connect_to_db().then(() => sql_operations.init_db(config)).catch((error) => console.error(error));
+sql_operations.connect_to_db().then(() => sql_operations.init_db(config)).catch((err) => console.error(err));
 
 let stats = null;
-cloudflare_stats.store_domain_request_info().then(() => {
-	stats = cloudflare_stats.get_domain_request_info();
-}).catch((error) => console.error(error));
+cloudflare_stats.store_domain_request_info().then(() => stats = cloudflare_stats.get_domain_request_info()).catch((err) => console.error(err));
 
 let countdown = 30;
 setInterval(() => {
@@ -35,13 +33,12 @@ setInterval(() => {
 }, 1000);
 setInterval(() => {
 	cloudflare_stats.store_domain_request_info().then(() => {
-		console.log("stored domain request info");
 		stats = cloudflare_stats.get_domain_request_info();
 		io.emit("update domain request info", stats);
-	}).catch((error) => console.error(error));
+	}).catch((err) => console.error(err));
 }, 30000); // 30s
 
-const index = ""; // index of this server relative to domain. use as project root for non-html static file links in handlebars html
+const index = ""; // index of this server relative to domain. use as project root for non-html static file links in hbs html
 
 const app = express();
 const server = http.createServer(app);
@@ -49,7 +46,7 @@ const io = socket_io(server, {path: `${index}/socket.io`});
 app.use(`${index}/view`, express.static(`${project_root}/view`));
 app.set("views", `${project_root}/view/html`);
 app.set("view engine", "handlebars");
-app.engine("handlebars", exp_hbs({
+app.engine("handlebars", express_hbs({
 	layoutsDir: `${project_root}/view/html`,
 	defaultLayout: "template.handlebars"
 }));
@@ -137,7 +134,7 @@ io.on("connect", (socket) => {
 				setTimeout(() => {
 					io.to(socket.id).emit("datetime", timezone);
 				}, 3000);
-			}).catch((error) => console.error(error));
+			}).catch((err) => console.error(err));
 		}
 	}
 });
@@ -160,8 +157,9 @@ if (config == "dev") {
 }
 
 // set app local vars (auto passed as data to all hbs renders)
-app.locals.index = index;
 app.locals.hosts = hosts;
+app.locals.index = index;
+app.locals.repo = "https://github.com/j9108c/j9108c";
 
 // port and listen
 const port = process.env.PORT || 1025;

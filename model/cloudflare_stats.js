@@ -11,7 +11,7 @@ let from = null;
 let to = null;
 
 function set_dates(range) {
-	now = new Date(); // UTC
+	now = new Date(); // utc
 	to = now.toISOString().slice(0, 10);
 	if (range == "today") {
 		from = new Date(now.setDate(now.getDate())).toISOString().slice(0, 10);
@@ -59,7 +59,7 @@ function get_requests_by_country(range) {
 			} else {
 				resolve(response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"][0]["sum"]["countryMap"].sort((a, b) => b.requests - a.requests)); // sort by number of requests, descending
 			}
-		}).catch((error) => console.error(error));
+		}).catch((err) => reject(console.error(err)));
 	});
 }
 
@@ -84,7 +84,7 @@ async function store_domain_request_info() {
 		last7days_countries.forEach((country) => last7days_total += country["requests"]);
 		last30days_countries.forEach((country) => last30days_total += country["requests"]);
 	
-		resolve();
+		resolve(console.log("stored domain request info"));
 	});
 }
 

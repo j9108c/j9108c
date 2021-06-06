@@ -36,10 +36,10 @@ if (document.cookie != "") {
 if (document.title == "dev portfolio — j9108c") { // index
 	const light_mode_button = document.getElementById("light_mode_button");
 
-	light_mode_button.addEventListener("click", (event) => {
+	light_mode_button.addEventListener("click", (evt) => {
 		if (document.cookie == "") {
 			document.cookie = "light_mode=on";
-			document.cookie = "max-age=60*60*24*365*9999";
+			document.cookie = "max-age=60*60*24*365*999";
 		} else {
 			if (light_mode_preference == "on") {
 				document.cookie = "light_mode=off";
@@ -55,7 +55,7 @@ if (document.title == "dev portfolio — j9108c") { // index
 	});
 }
 
-dropdown_button.addEventListener("click", (event) => {
+dropdown_button.addEventListener("click", (evt) => {
 	setTimeout(() => dropdown_menu.scrollIntoView({behavior: "smooth"}), 250);
 });
 
