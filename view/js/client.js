@@ -93,6 +93,10 @@ socket.on("datetime", (timezone) => {
 });
 
 socket.on("update domain request info", (stats) => {
+	if (stats == null) {
+		return console.log("cloudflare api error");
+	}
+
 	today_total = stats[0];
 	last7days_total = stats[1];
 	last30days_total = stats[2];

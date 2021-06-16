@@ -86,14 +86,14 @@ async function store_domain_request_info() {
 		last7days_countries.forEach((country) => last7days_total += country["requests"]);
 		last30days_countries.forEach((country) => last30days_total += country["requests"]);
 
-		console.log("stored domain request info");
+		// console.log("stored domain request info");
 	} catch (err) {
 		console.error(err);
 	}
 }
 
 function get_domain_request_info() {
-	return [
+	const domain_request_info = [
 		today_total,
 		last7days_total,
 		last30days_total,
@@ -101,6 +101,14 @@ function get_domain_request_info() {
 		last7days_countries,
 		last30days_countries
 	];
+
+	let valid = true;
+	domain_request_info.forEach((item) => ((item.constructor.name == "Error") ? valid = false : null));
+	if (valid) {
+		return domain_request_info;
+	} else {
+		return null;
+	}
 }
 
 module.exports.store_domain_request_info = store_domain_request_info;

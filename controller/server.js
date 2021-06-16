@@ -28,14 +28,17 @@ setInterval(() => {
 	io.emit("update countdown", countdown-=1);
 	if (countdown == 0) {
 		countdown = 30;
-		console.log("countdown reset");
+		// console.log("countdown reset");
 	}
 }, 1000);
-setInterval(() => {
-	cloudflare_stats.store_domain_request_info().then(() => {
+setInterval(async () => {
+	try {
+		await cloudflare_stats.store_domain_request_info();
 		stats = cloudflare_stats.get_domain_request_info();
 		io.emit("update domain request info", stats);
-	}).catch((err) => console.error(err));
+	} catch (err) {
+		console.error(err);
+	}
 }, 30000); // 30s
 
 const index = ""; // index of this server relative to domain. use as project root for non-html static file links in hbs html
@@ -72,7 +75,7 @@ app.get(`${index}/stats`, (req, res) => {
 	});
 });
 
-io.on("connect", (socket) => {
+io.on("connect", async (socket) => {
 	io.to(socket.id).emit("update countdown", countdown);
 	if (stats != null) {
 		io.to(socket.id).emit("update domain request info", stats);
@@ -88,7 +91,7 @@ io.on("connect", (socket) => {
 
 		io.to(socket.id).emit("store dev private ip", secrets.dev_private_ip);
 	} else {
-		console.log(`socket connected: ${socket.id}`);
+		console.log(`socket "${socket.id}" connected`);
 
 		const socket_address = headers["host"].split(":")[0];
 		((socket_address == secrets.dev_private_ip) ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
@@ -115,26 +118,30 @@ io.on("connect", (socket) => {
 					ip = ((socket.handshake.address.slice(0, 7) == "::ffff:") ? socket.handshake.address.split(":").pop() : socket.handshake.address);
 				}
 			}
-			console.log(ip);
-		
-			axios.get(`http://ip-api.com/json/${ip}?fields=status,city,timezone`).then((response) => {
+			// console.log(ip);
+
+			try {
+				const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,city,timezone`);
+
 				const city = response.data["city"].toLowerCase();
-				console.log(city);
+				// console.log(city);
 				const timezone = response.data["timezone"];
-				console.log(timezone);
-	
+				// console.log(timezone);
+
 				setTimeout(() => {
 					io.to(socket.id).emit("message", `greetings, ${ip} @ ${city} !`);
 				}, 2000);
-	
+
 				setTimeout(() => {
 					io.to(socket.id).emit("message", "welcome to my dev portfolio !");
 				}, 2500);
-	
+
 				setTimeout(() => {
 					io.to(socket.id).emit("datetime", timezone);
 				}, 3000);
-			}).catch((err) => console.error(err));
+			} catch (err) {
+				console.error(err);
+			}
 		}
 	}
 });
