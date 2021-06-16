@@ -52,16 +52,12 @@ async function get_requests_by_country(range) {
 		`
 	};
 
-	try {
-		const response = await axios.post(url, data, config);
+	const response = await axios.post(url, data, config);
 
-		if (response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"].length == 0) { // no requests
-			return [];
-		} else {
-			return response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"][0]["sum"]["countryMap"].sort((a, b) => b.requests - a.requests); // sort by number of requests, descending
-		}
-	} catch (err) {
-		console.error(err);
+	if (response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"].length == 0) { // no requests
+		return [];
+	} else {
+		return response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"][0]["sum"]["countryMap"].sort((a, b) => b.requests - a.requests); // sort by number of requests, descending
 	}
 }
 
@@ -73,27 +69,23 @@ let last7days_countries = null;
 let last30days_countries = null;
 
 async function store_domain_request_info() {
-	try {
-		today_countries = await get_requests_by_country("today");
-		last7days_countries = await get_requests_by_country("last7days");
-		last30days_countries = await get_requests_by_country("last30days");
+	today_countries = await get_requests_by_country("today");
+	last7days_countries = await get_requests_by_country("last7days");
+	last30days_countries = await get_requests_by_country("last30days");
 
-		today_total = 0;
-		last7days_total = 0;
-		last30days_total = 0;
-	
-		today_countries.forEach((country) => today_total += country["requests"]);
-		last7days_countries.forEach((country) => last7days_total += country["requests"]);
-		last30days_countries.forEach((country) => last30days_total += country["requests"]);
+	today_total = 0;
+	last7days_total = 0;
+	last30days_total = 0;
 
-		// console.log("stored domain request info");
-	} catch (err) {
-		console.error(err);
-	}
+	today_countries.forEach((country) => today_total += country["requests"]);
+	last7days_countries.forEach((country) => last7days_total += country["requests"]);
+	last30days_countries.forEach((country) => last30days_total += country["requests"]);
+
+	// console.log("stored domain request info");
 }
 
 function get_domain_request_info() {
-	const domain_request_info = [
+	return [
 		today_total,
 		last7days_total,
 		last30days_total,
@@ -101,14 +93,6 @@ function get_domain_request_info() {
 		last7days_countries,
 		last30days_countries
 	];
-
-	let valid = true;
-	domain_request_info.forEach((item) => ((item.constructor.name == "Error") ? valid = false : null));
-	if (valid) {
-		return domain_request_info;
-	} else {
-		return null;
-	}
 }
 
 module.exports.store_domain_request_info = store_domain_request_info;
