@@ -96,11 +96,7 @@ io.on("connect", async (socket) => {
 		const socket_address = headers["host"].split(":")[0];
 		((socket_address == secrets.dev_private_ip) ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
 
-		try {
-			sql_operations.add_visit();
-		} catch (err) {
-			console.error(err);
-		}
+		sql_operations.add_visit().catch((err) => console.error(err));
 
 		const urlpath = headers["referer"].split(headers["host"]).pop();
 		// console.log(urlpath);

@@ -1,6 +1,8 @@
 {
-	"name": "j9108c",
 	"author": "j9108c",
+	"name": "j9108c",
+	"repository": "github:j9108c/j9108c",
+	"license": "MIT",
 	"main": "./controller/server.js",
 	"scripts": {
 		"dev": "nodemon ./controller/server.js",
@@ -16,6 +18,6 @@
 		"express": "^4.17.1",
 		"express-handlebars": "^4.0.6",
 		"pg": "^8.6.0",
-		"socket.io": "^3.1.2"
+		"socket.io": "^4.1.2"
 	}
 }

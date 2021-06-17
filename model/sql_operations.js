@@ -54,8 +54,8 @@ async function init_db(config) {
 	);
 }
 
-function add_visit() {
-	sql_client.query(
+async function add_visit() {
+	await sql_client.query(
 		"update visit " +
 		"set count=count+1 " +
 		"where id=0;"
