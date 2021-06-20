@@ -1,8 +1,7 @@
 let index = null;
 const socket = io({path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`}); // triggers server's io.on connect
 
-const terminal = document.getElementById("terminal");
-const messages = document.getElementById("messages");
+const all_elements = document.getElementsByTagName("*");
 const dropdown_button = document.getElementById("dropdown_button");
 const dropdown_menu = document.getElementById("dropdown_menu");
 const today_total_wrappers = document.getElementsByClassName("today_total_wrapper");
@@ -15,16 +14,17 @@ const countdown_wrappers = document.getElementsByClassName("countdown_wrapper");
 const today_table_body_wrapper = document.getElementById("today_table_body_wrapper");
 const last7days_table_body_wrapper = document.getElementById("last7days_table_body_wrapper");
 const last30days_table_body_wrapper = document.getElementById("last30days_table_body_wrapper");
-const all_elements = document.getElementsByTagName("*");
+const terminal = document.getElementById("terminal");
+const messages = document.getElementById("messages");
 
-let light_mode_preference = null;
-if (document.cookie != "") {
-	light_mode_preference = document.cookie.split("; ").find((cookie) => cookie.startsWith("light_mode")).split("=")[1];
+let light_mode = null;
+if (document.cookie) {
+	light_mode = document.cookie.split("; ").find((cookie) => cookie.startsWith("light_mode")).split("=")[1];
 
-	if (light_mode_preference == "on") {
+	if (light_mode == "on") {
 		[...all_elements].forEach((element) => element.classList.add("light_mode"));
 
-		if (document.title == "stats — j9108c") {
+		if (window.location.pathname == "/stats") {
 			const tables = document.getElementsByClassName("table");
 			[...tables].forEach((table) => {
 				table.classList.remove("table-dark");
@@ -33,20 +33,20 @@ if (document.cookie != "") {
 		}
 	}
 }
-if (document.title == "dev portfolio — j9108c") { // index
+if (window.location.pathname == "/") { // index
 	const light_mode_button = document.getElementById("light_mode_button");
 
 	light_mode_button.addEventListener("click", (evt) => {
-		if (document.cookie == "") {
+		if (!document.cookie) {
 			document.cookie = "light_mode=on";
-			document.cookie = "max-age=60*60*24*365*999";
+			document.cookie = "max-age=1000*60*60*24*365*999";
 		} else {
-			if (light_mode_preference == "on") {
+			if (light_mode == "on") {
 				document.cookie = "light_mode=off";
-				light_mode_preference = "off";
-			} else if (light_mode_preference == "off") {
+				light_mode = "off";
+			} else if (light_mode == "off") {
 				document.cookie = "light_mode=on";
-				light_mode_preference = "on";
+				light_mode = "on";
 			}
 		}
 
@@ -55,42 +55,14 @@ if (document.title == "dev portfolio — j9108c") { // index
 	});
 }
 
-dropdown_button.addEventListener("click", (evt) => {
-	setTimeout(() => dropdown_menu.scrollIntoView({behavior: "smooth"}), 250);
-});
+dropdown_button.addEventListener("click", (evt) => setTimeout(() => dropdown_menu.scrollIntoView({behavior: "smooth"}), 250));
 
 socket.on("replace localhost with dev private ip", (dev_private_ip) => {
 	const all_a_tags = document.getElementsByTagName("a");
-
 	[...all_a_tags].forEach((a_tag) => a_tag.href = a_tag.href.replace("localhost", dev_private_ip));
 });
 
-socket.on("clear terminal", () => {
-	messages.innerHTML = "<p id='gt_sign'>> <span id='blinking_caret'>|</span></p>";
-});
-
-socket.on("message", (message) => {
-	remove_blinking_caret();
-	output_message(message);
-	add_blinking_caret();
-
-	terminal.scrollTop = terminal.scrollHeight; // scroll down
-});
-
-socket.on("datetime", (timezone) => {
-	remove_blinking_caret();
-
-	const p = document.createElement("p");
-	p.id = "datetime";
-	p.classList.add("message");
-	p.classList.add("mb-1");
-	p.innerHTML = ">";
-	messages.appendChild(p);
-	update_datetime(timezone);
-	setInterval(() => update_datetime(timezone), 1000);
-
-	add_blinking_caret();
-});
+socket.on("update countdown", (countdown) => [...countdown_wrappers].forEach((countdown_wrapper) => countdown_wrapper.innerHTML = countdown));
 
 socket.on("update domain request info", (stats) => {
 	today_total = stats[0];
@@ -123,9 +95,57 @@ socket.on("update domain request info", (stats) => {
 	}
 });
 
-socket.on("update countdown", (countdown) => {
-	[...countdown_wrappers].forEach((countdown_wrapper) => countdown_wrapper.innerHTML = countdown);
+socket.on("message", (message) => {
+	remove_blinking_caret();
+	output_message(message);
+	add_blinking_caret();
+
+	terminal.scrollTop = terminal.scrollHeight; // scroll down
 });
+
+socket.on("datetime", (timezone) => {
+	remove_blinking_caret();
+
+	const p = document.createElement("p");
+	p.id = "datetime";
+	p.classList.add("message");
+	p.classList.add("mb-1");
+	p.innerHTML = ">";
+	messages.appendChild(p);
+	update_datetime(timezone);
+	setInterval(() => update_datetime(timezone), 1000);
+
+	add_blinking_caret();
+});
+
+socket.on("clear terminal", () => messages.innerHTML = "<p id='gt_sign'>> <span id='blinking_caret'>|</span></p>");
+
+function list_domain_request_info(countries_array, parent_ul) {
+	let li = null;
+
+	if (countries_array.length == 0) {
+		return;
+	} else if (countries_array.length <= 3) {
+		countries_array.forEach((country) => {
+			li = document.createElement("li");
+			li.classList.add("mt-n1");
+			li.innerHTML = `${country["clientCountryName"]}: ${country["requests"]}`;
+			parent_ul.appendChild(li);
+		});
+	} else {
+		countries_array.slice(0, 3).forEach((country) => {
+			li = document.createElement("li");
+			li.classList.add("mt-n1");
+			li.innerHTML = `${country["clientCountryName"]}: ${country["requests"]}`;
+			parent_ul.appendChild(li);
+		});
+
+		li = document.createElement("li");
+		li.classList.add("mt-n1");
+		li.innerHTML = `${countries_array.length - 3} more`;
+		parent_ul.appendChild(li);
+	}
+}
 
 function output_message(message) {
 	const p = document.createElement("p");
@@ -169,33 +189,6 @@ function update_datetime(timezone) {
 		document.getElementById("datetime").innerHTML = `> info: ${formatted_dt}`;
 	} catch {
 		null;
-	}
-}
-
-function list_domain_request_info(countries_array, parent_ul) {
-	let li = null;
-
-	if (countries_array.length == 0) {
-		return;
-	} else if (countries_array.length <= 3) {
-		countries_array.forEach((country) => {
-			li = document.createElement("li");
-			li.classList.add("mt-n1");
-			li.innerHTML = `${country["clientCountryName"]}: ${country["requests"]}`;
-			parent_ul.appendChild(li);
-		});
-	} else {
-		countries_array.slice(0, 3).forEach((country) => {
-			li = document.createElement("li");
-			li.classList.add("mt-n1");
-			li.innerHTML = `${country["clientCountryName"]}: ${country["requests"]}`;
-			parent_ul.appendChild(li);
-		});
-
-		li = document.createElement("li");
-		li.classList.add("mt-n1");
-		li.innerHTML = `${countries_array.length - 3} more`;
-		parent_ul.appendChild(li);
 	}
 }
 

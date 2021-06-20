@@ -77,15 +77,16 @@ app.get(`${index}/stats`, (req, res) => {
 
 io.on("connect", async (socket) => {
 	io.to(socket.id).emit("update countdown", countdown);
-	if (stats != null) {
+	if (stats) {
 		io.to(socket.id).emit("update domain request info", stats);
 	} else {
-		setTimeout(() => ((stats != null) ? io.to(socket.id).emit("update domain request info", stats) : null), 5000);
+		setTimeout(() => ((stats) ? io.to(socket.id).emit("update domain request info", stats) : null), 5000);
 	}
 
-	const headers = socket.handshake["headers"];
+	const headers = socket.handshake.headers;
+	// console.log(headers);
 	if (headers["user-agent"] == "node-XMLHttpRequest") { // other localhost node server connected as client
-		console.log(`other localhost server (${headers["app"]}) connected as client`);
+		console.log(`other localhost server (${headers.app}) connected as client`);
 
 		io.to(socket.id).emit("store hosts", hosts);
 
@@ -93,12 +94,12 @@ io.on("connect", async (socket) => {
 	} else {
 		console.log(`socket "${socket.id}" connected`);
 
-		const socket_address = headers["host"].split(":")[0];
+		const socket_address = headers.host.split(":")[0];
 		((socket_address == secrets.dev_private_ip) ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
 
 		sql_operations.add_visit().catch((err) => console.error(err));
 
-		const urlpath = headers["referer"].split(headers["host"]).pop();
+		const urlpath = headers.referer.split(headers.host).pop();
 		// console.log(urlpath);
 		// conditional based on urlpath (i.e., everything in the url after the domain) prefixes rather than exact urlpath. this is to account for sites adding their own queries to the url, like fb does with their "?fbclid"
 		if (urlpath.startsWith("/apps")) {
@@ -123,22 +124,16 @@ io.on("connect", async (socket) => {
 			try {
 				const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,city,timezone`);
 
-				const city = response.data["city"].toLowerCase();
+				const city = response.data.city.toLowerCase();
 				// console.log(city);
-				const timezone = response.data["timezone"];
+				const timezone = response.data.timezone;
 				// console.log(timezone);
 
-				setTimeout(() => {
-					io.to(socket.id).emit("message", `greetings, ${ip} @ ${city} !`);
-				}, 2000);
+				setTimeout(() => io.to(socket.id).emit("message", `greetings, ${ip} @ ${city} !`), 2000);
 
-				setTimeout(() => {
-					io.to(socket.id).emit("message", "welcome to my dev portfolio !");
-				}, 2500);
+				setTimeout(() => io.to(socket.id).emit("message", "welcome to my dev portfolio !"), 2500);
 
-				setTimeout(() => {
-					io.to(socket.id).emit("datetime", timezone);
-				}, 3000);
+				setTimeout(() => io.to(socket.id).emit("datetime", timezone), 3000);
 			} catch (err) {
 				console.error(err);
 			}
