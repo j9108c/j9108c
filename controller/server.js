@@ -46,11 +46,11 @@ const index = ""; // index of this server relative to domain. use as project roo
 const app = express();
 const server = http.createServer(app);
 const io = socket_io(server, {path: `${index}/socket.io`});
-app.use(`${index}/view`, express.static(`${project_root}/view`));
-app.set("views", `${project_root}/view/html`);
+app.use(`${index}/static`, express.static(`${project_root}/static`));
+app.set("views", `${project_root}/static/html`);
 app.set("view engine", "handlebars");
 app.engine("handlebars", express_hbs({
-	layoutsDir: `${project_root}/view/html`,
+	layoutsDir: `${project_root}/static/html`,
 	defaultLayout: "template.handlebars"
 }));
 
