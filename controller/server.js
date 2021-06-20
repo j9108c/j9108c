@@ -162,6 +162,7 @@ if (config == "dev") {
 app.locals.hosts = hosts;
 app.locals.index = index;
 app.locals.repo = "https://github.com/j9108c/j9108c";
+app.locals.current_year = new Date().getFullYear();
 
 // port and listen
 const port = process.env.PORT || 1025;
