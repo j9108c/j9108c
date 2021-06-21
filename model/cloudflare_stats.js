@@ -1,8 +1,7 @@
-let project_root = __dirname.split("/");
-project_root.pop();
-project_root = project_root.join("/");
+const run_config = ((process.argv[0].slice(0, 13) == "/home/j9108c/") ? "dev" : "prod");
+const project_root = process.cwd();
 
-const secrets = require(`${project_root}/_secrets.js`);
+const secrets = ((run_config == "dev") ? require(`${project_root}/_secrets.js`).dev : require(`${project_root}/_secrets.js`).prod);
 
 const axios = require("axios");
 
@@ -26,7 +25,7 @@ const url = "https://api.cloudflare.com/client/v4/graphql";
 let data = null;
 const config = {
 	headers: {
-		Authorization: `bearer ${secrets.cloudflare_auth_token}`
+		Authorization: `Bearer ${secrets.cloudflare_auth_token}`
 	}
 };
 

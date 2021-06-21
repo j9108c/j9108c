@@ -1,13 +1,9 @@
-let config = null;
-((process.argv[0].slice(0, 13) == "/home/j9108c/") ? config = "dev" : config = "prod");
-console.log(config);
-
-let project_root = __dirname.split("/");
-project_root.pop();
-project_root = project_root.join("/");
+const run_config = ((process.argv[0].slice(0, 13) == "/home/j9108c/") ? "dev" : "prod");
+console.log(run_config);
+const project_root = process.cwd();
 console.log(project_root);
 
-const secrets = require(`${project_root}/_secrets.js`);
+const secrets = ((run_config == "dev") ? require(`${project_root}/_secrets.js`).dev : require(`${project_root}/_secrets.js`).prod);
 const sql_operations = require(`${project_root}/model/sql_operations.js`);
 const cloudflare_stats = require(`${project_root}/model/cloudflare_stats.js`);
 
@@ -17,8 +13,7 @@ const http = require("http");
 const socket_io = require("socket.io");
 const axios = require("axios");
 
-sql_operations.set_client(config);
-sql_operations.connect_to_db().then(() => sql_operations.init_db(config)).catch((err) => console.error(err));
+sql_operations.connect_to_db().then(() => sql_operations.init_db()).catch((err) => console.error(err));
 
 let stats = null;
 cloudflare_stats.store_domain_request_info().then(() => stats = cloudflare_stats.get_domain_request_info()).catch((err) => console.error(err));
@@ -41,6 +36,7 @@ setInterval(async () => {
 	}
 }, 30000); // 30s
 
+const app_name = "j9108c";
 const index = ""; // index of this server relative to domain. use as project root for non-html static file links in hbs html
 
 const app = express();
@@ -92,7 +88,7 @@ io.on("connect", async (socket) => {
 
 		io.to(socket.id).emit("store dev private ip", secrets.dev_private_ip);
 	} else {
-		console.log(`socket "${socket.id}" connected`);
+		console.log(`socket (${socket.id}) connected`);
 
 		const socket_address = headers.host.split(":")[0];
 		((socket_address == secrets.dev_private_ip) ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
@@ -110,9 +106,9 @@ io.on("connect", async (socket) => {
 			io.to(socket.id).emit("clear terminal");
 
 			let ip = null;
-			if (config == "dev") {
+			if (run_config == "dev") {
 				ip = secrets.dev_public_ip;
-			} else if (config == "prod") {
+			} else if (run_config == "prod") {
 				if ("x-forwarded-for" in headers) { // from nginx reverse proxy
 					ip = headers["x-forwarded-for"].split(", ")[0];
 				} else {
@@ -141,15 +137,15 @@ io.on("connect", async (socket) => {
 	}
 });
 
-// set hosts var for dynamic html hrefs wrt launch config
+// set hosts var for dynamic html hrefs wrt launch run_config
 let hosts = null;
-if (config == "dev") {
+if (run_config == "dev") {
 	hosts = {
 		1025: "http://localhost:1025",
 		2000: "http://localhost:2000",
 		3000: "http://localhost:3000"
 	};
-} else if (config == "prod") {
+} else if (run_config == "prod") {
 	hosts = {
 		// http on purpose, for testing before ssl. after ssl, auto redirects to https
 		1025: "http://j9108c.com",
@@ -161,9 +157,9 @@ if (config == "dev") {
 // set app local vars (auto passed as data to all hbs renders)
 app.locals.hosts = hosts;
 app.locals.index = index;
-app.locals.repo = "https://github.com/j9108c/j9108c";
+app.locals.repo = `https://github.com/j9108c/${app_name}`;
 app.locals.current_year = new Date().getFullYear();
 
 // port and listen
 const port = process.env.PORT || 1025;
-server.listen(port, () => console.log(`(j9108c) server started on localhost:${port}`));
+server.listen(port, () => console.log(`server (${app_name}) started on (localhost:${port})`));

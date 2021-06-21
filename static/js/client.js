@@ -129,14 +129,14 @@ function list_domain_request_info(countries_array, parent_ul) {
 		countries_array.forEach((country) => {
 			li = document.createElement("li");
 			li.classList.add("mt-n1");
-			li.innerHTML = `${country["clientCountryName"]}: ${country["requests"]}`;
+			li.innerHTML = `${country.clientCountryName}: ${country.requests}`;
 			parent_ul.appendChild(li);
 		});
 	} else {
 		countries_array.slice(0, 3).forEach((country) => {
 			li = document.createElement("li");
 			li.classList.add("mt-n1");
-			li.innerHTML = `${country["clientCountryName"]}: ${country["requests"]}`;
+			li.innerHTML = `${country.clientCountryName}: ${country.requests}`;
 			parent_ul.appendChild(li);
 		});
 
