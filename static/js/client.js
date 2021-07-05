@@ -1,17 +1,20 @@
 let index = null;
-const socket = io({path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`}); // triggers server's io.on connect
+const socket = io({ // triggers server's io.on connect
+	path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`
+});
 
-const all_elements = document.getElementsByTagName("*");
-const dropdown_button = document.getElementById("dropdown_button");
+const dropdown_btn = document.getElementById("dropdown_btn");
 const dropdown_menu = document.getElementById("dropdown_menu");
-const today_total_wrappers = document.getElementsByClassName("today_total_wrapper");
+const last24hours_total_wrappers = document.getElementsByClassName("last24hours_total_wrapper");
 const last7days_total_wrappers = document.getElementsByClassName("last7days_total_wrapper");
 const last30days_total_wrappers = document.getElementsByClassName("last30days_total_wrapper");
-const today_list_wrapper = document.getElementById("today_list_wrapper");
+const last24hours_list_wrapper = document.getElementById("last24hours_list_wrapper");
 const last7days_list_wrapper = document.getElementById("last7days_list_wrapper");
 const last30days_list_wrapper = document.getElementById("last30days_list_wrapper");
 const countdown_wrappers = document.getElementsByClassName("countdown_wrapper");
-const today_table_body_wrapper = document.getElementById("today_table_body_wrapper");
+const dropright_btn = document.getElementById("dropright_btn");
+const dropright_menu = document.getElementById("dropright_menu");
+const last24hours_table_body_wrapper = document.getElementById("last24hours_table_body_wrapper");
 const last7days_table_body_wrapper = document.getElementById("last7days_table_body_wrapper");
 const last30days_table_body_wrapper = document.getElementById("last30days_table_body_wrapper");
 const terminal = document.getElementById("terminal");
@@ -20,42 +23,46 @@ const messages = document.getElementById("messages");
 let light_mode = null;
 if (document.cookie) {
 	light_mode = document.cookie.split("; ").find((cookie) => cookie.startsWith("light_mode")).split("=")[1];
-
-	if (light_mode == "on") {
-		[...all_elements].forEach((element) => element.classList.add("light_mode"));
-
-		if (window.location.pathname == "/stats") {
-			const tables = document.getElementsByClassName("table");
-			[...tables].forEach((table) => {
-				table.classList.remove("table-dark");
-				table.classList.add("table-secondary");
-			});
-		}
-	}
+	(light_mode == "on" ? toggle_invert() : null);
 }
-if (window.location.pathname == "/") { // index
-	const light_mode_button = document.getElementById("light_mode_button");
-
-	light_mode_button.addEventListener("click", (evt) => {
+if (window.location.pathname == "/") {
+	const light_mode_btn = document.getElementById("light_mode_btn");
+	light_mode_btn.addEventListener("click", (evt) => {
+		toggle_invert();
 		if (!document.cookie) {
 			document.cookie = "light_mode=on";
 			document.cookie = "max-age=1000*60*60*24*365*999";
 		} else {
 			if (light_mode == "on") {
-				document.cookie = "light_mode=off";
 				light_mode = "off";
+				document.cookie = "light_mode=off";
 			} else if (light_mode == "off") {
-				document.cookie = "light_mode=on";
 				light_mode = "on";
+				document.cookie = "light_mode=on";
 			}
 		}
-
-		document.body.style.transition = "background-color 0.5s";
-		[...all_elements].forEach((element) => element.classList.toggle("light_mode"));
 	});
 }
 
-dropdown_button.addEventListener("click", (evt) => setTimeout(() => dropdown_menu.scrollIntoView({behavior: "smooth"}), 250));
+document.addEventListener("keydown", (evt) => {
+	if (evt.code == "Escape") {
+		setTimeout(() => (!dropdown_menu.classList.contains("show") ? dropdown_btn.blur() : null), 100);
+		setTimeout(() => (!dropright_menu.classList.contains("show") ? dropright_btn.blur() : null), 100);
+	}
+});
+
+dropdown_btn.addEventListener("click", (evt) => {
+	setTimeout(() => (!dropdown_menu.classList.contains("show") ? dropdown_btn.blur() : null), 100);
+
+	setTimeout(() => {
+		dropdown_menu.scrollIntoView({
+			behavior: "smooth",
+			block: "end"
+		});
+	}, 250);
+});
+
+dropright_btn.addEventListener("click", (evt) => setTimeout(() => (!dropright_menu.classList.contains("show") ? dropright_btn.blur() : null), 100));
 
 socket.on("replace localhost with dev private ip", (dev_private_ip) => {
 	const all_a_tags = document.getElementsByTagName("a");
@@ -64,34 +71,27 @@ socket.on("replace localhost with dev private ip", (dev_private_ip) => {
 
 socket.on("update countdown", (countdown) => [...countdown_wrappers].forEach((countdown_wrapper) => countdown_wrapper.innerHTML = countdown));
 
-socket.on("update domain request info", (stats) => {
-	today_total = stats[0];
-	last7days_total = stats[1];
-	last30days_total = stats[2];
-	today_countries = stats[3];
-	last7days_countries = stats[4];
-	last30days_countries = stats[5];
+socket.on("update domain request info", (domain_request_info) => {
+	[...last24hours_total_wrappers].forEach((last24hours_total_wrapper) => last24hours_total_wrapper.innerHTML = domain_request_info.last24hours_total);
+	[...last7days_total_wrappers].forEach((last7days_total_wrapper) => last7days_total_wrapper.innerHTML = domain_request_info.last7days_total);
+	[...last30days_total_wrappers].forEach((last30days_total_wrapper) => last30days_total_wrapper.innerHTML = domain_request_info.last30days_total);
 
-	[...today_total_wrappers].forEach((today_total_wrapper) => today_total_wrapper.innerHTML = today_total);
-	[...last7days_total_wrappers].forEach((last7days_total_wrapper) => last7days_total_wrapper.innerHTML = last7days_total);
-	[...last30days_total_wrappers].forEach((last30days_total_wrapper) => last30days_total_wrapper.innerHTML = last30days_total);
-
-	today_list_wrapper.innerHTML= "";
-	last7days_list_wrapper.innerHTML= "";
+	last24hours_list_wrapper.innerHTML = "";
+	last7days_list_wrapper.innerHTML = "";
 	last30days_list_wrapper.innerHTML = "";
 
-	list_domain_request_info(today_countries, today_list_wrapper);
-	list_domain_request_info(last7days_countries, last7days_list_wrapper);
-	list_domain_request_info(last30days_countries, last30days_list_wrapper);
+	list_domain_request_info(domain_request_info.last24hours_countries, last24hours_list_wrapper);
+	list_domain_request_info(domain_request_info.last7days_countries, last7days_list_wrapper);
+	list_domain_request_info(domain_request_info.last30days_countries, last30days_list_wrapper);
 
 	if (window.location.pathname == "/stats") {
-		today_table_body_wrapper.innerHTML = "";
+		last24hours_table_body_wrapper.innerHTML = "";
 		last7days_table_body_wrapper.innerHTML = "";
 		last30days_table_body_wrapper.innerHTML = "";
 	
-		fill_stats_table(today_total, today_countries, today_table_body_wrapper);
-		fill_stats_table(last7days_total, last7days_countries, last7days_table_body_wrapper);
-		fill_stats_table(last30days_total, last30days_countries, last30days_table_body_wrapper);
+		fill_stats_table(domain_request_info.last24hours_total, domain_request_info.last24hours_countries, last24hours_table_body_wrapper);
+		fill_stats_table(domain_request_info.last7days_total, domain_request_info.last7days_countries, last7days_table_body_wrapper);
+		fill_stats_table(domain_request_info.last30days_total, domain_request_info.last30days_countries, last30days_table_body_wrapper);
 	}
 });
 
@@ -179,7 +179,7 @@ function update_datetime(timezone) {
 	const day = ("0" + dt.getDate()).slice(-2);
 	const month = ("0" + (dt.getMonth()+1)).slice(-2);
 	const year = dt.getFullYear();
-	const hour = ((dt.getHours() > 12) ? ("0" + (dt.getHours()-12)).slice(-2) : ("0" + dt.getHours()).slice(-2));
+	const hour = (dt.getHours() > 12 ? ("0" + (dt.getHours()-12)).slice(-2) : ("0" + dt.getHours()).slice(-2));
 	const minute = ("0" + dt.getMinutes()).slice(-2);
 	const second = ("0" + dt.getSeconds()).slice(-2);
 
@@ -232,4 +232,14 @@ function fill_stats_table(requests_total, countries_array, parent_tbody) {
 	tr.appendChild(td_requests);
 
 	parent_tbody.appendChild(tr);
+}
+
+function toggle_invert() {
+	document.documentElement.classList.toggle("invert");
+	document.body.classList.toggle("light_mode");
+	dropdown_btn.classList.toggle("anti_invert");
+	dropdown_menu.classList.toggle("anti_invert");
+	dropdown_menu.classList.toggle("light_mode");
+	dropright_btn.classList.toggle("anti_invert");
+	dropright_menu.classList.toggle("anti_invert");
 }

@@ -1,43 +1,40 @@
-const run_config = ((process.argv[0].slice(0, 13) == "/home/j9108c/") ? "dev" : "prod");
 const project_root = process.cwd();
+const run_config = (project_root.toLowerCase().slice(0, 20) == "/mnt/c/users/j9108c/" ? "dev" : "prod");
 
-const secrets = ((run_config == "dev") ? require(`${project_root}/_secrets.js`).dev : require(`${project_root}/_secrets.js`).prod);
+const secrets = (run_config == "dev" ? require(`${project_root}/_secrets.js`).dev : require(`${project_root}/_secrets.js`).prod);
 
 const axios = require("axios");
 
-let now = null;
-let from = null;
-let to = null;
+function get_dates(range) {
+	let now = new Date(); // utc
+	let from = null;
+	let to = null;
 
-function set_dates(range) {
-	now = new Date(); // utc
-	to = now.toISOString().slice(0, 10);
-	if (range == "today") {
-		from = new Date(now.setDate(now.getDate())).toISOString().slice(0, 10);
+	if (range == "last24hours") {
+		from = new Date(now.setDate(now.getDate() - 1)).toISOString();
 	} else if (range == "last7days") {
 		from = new Date(now.setDate(now.getDate() - 7)).toISOString().slice(0, 10);
 	} else if (range == "last30days") {
 		from = new Date(now.setDate(now.getDate() - 30)).toISOString().slice(0, 10);
 	}
+	now = new Date();
+	to = (range == "last24hours" ? now.toISOString() : now.toISOString().slice(0, 10));
+
+	return [from, to];
 }
 
-const url = "https://api.cloudflare.com/client/v4/graphql";
-let data = null;
-const config = {
-	headers: {
-		Authorization: `Bearer ${secrets.cloudflare_auth_token}`
-	}
-};
-
 async function get_requests_by_country(range) {
-	set_dates(range);
+	const [from, to] = get_dates(range);
+	const group = (range == "last24hours" ? "h" : "d");
+	const dt = (range == "last24hours" ? "datetime" : "date");
 
-	data = {
+	const endpoint = "https://api.cloudflare.com/client/v4/graphql";
+	const data = {
 		query: `
 			query {
 				viewer {
 					zones(filter: {zoneTag: "${secrets.cloudflare_zone_id}"}) {
-						httpRequests1dGroups(limit: 10000, filter: {date_geq: "${from}", date_leq: "${to}"}) {
+						httpRequests1${group}Groups(limit: 10000, filter: {${dt}_geq: "${from}", ${dt}_leq: "${to}"}) {
 							sum {
 								countryMap {
 									clientCountryName
@@ -50,49 +47,56 @@ async function get_requests_by_country(range) {
 			}
 		`
 	};
+	const config = {
+		headers: {
+			Authorization: `Bearer ${secrets.cloudflare_auth_token}`
+		}
+	};
 
-	const response = await axios.post(url, data, config);
+	const response = await axios.post(endpoint, data, config);
+	const response_data = response.data;
+	// console.log(response_data);
 
-	if (response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"].length == 0) { // no requests
+	if (response_data.data.viewer.zones[0][`httpRequests1${group}Groups`].length == 0) { // no requests
 		return [];
 	} else {
-		return response.data["data"]["viewer"]["zones"][0]["httpRequests1dGroups"][0]["sum"]["countryMap"].sort((a, b) => b.requests - a.requests); // sort by number of requests, descending
+		return response_data.data.viewer.zones[0][`httpRequests1${group}Groups`][0].sum.countryMap.sort((a, b) => b.requests - a.requests); // sort by number of requests, descending
 	}
 }
 
-let today_total = null;
-let last7days_total = null;
-let last30days_total = null;
-let today_countries = null;
-let last7days_countries = null;
-let last30days_countries = null;
+const domain_request_info = {};
+async function update(io) {
+	domain_request_info.last24hours_countries = await get_requests_by_country("last24hours");
+	domain_request_info.last7days_countries = await get_requests_by_country("last7days");
+	domain_request_info.last30days_countries = await get_requests_by_country("last30days");
 
-async function store_domain_request_info() {
-	today_countries = await get_requests_by_country("today");
-	last7days_countries = await get_requests_by_country("last7days");
-	last30days_countries = await get_requests_by_country("last30days");
+	domain_request_info.last24hours_total = 0;
+	domain_request_info.last7days_total = 0;
+	domain_request_info.last30days_total = 0;
 
-	today_total = 0;
-	last7days_total = 0;
-	last30days_total = 0;
+	domain_request_info.last24hours_countries.forEach((country) => domain_request_info.last24hours_total += country.requests);
+	domain_request_info.last7days_countries.forEach((country) => domain_request_info.last7days_total += country.requests);
+	domain_request_info.last30days_countries.forEach((country) => domain_request_info.last30days_total += country.requests);
 
-	today_countries.forEach((country) => today_total += country["requests"]);
-	last7days_countries.forEach((country) => last7days_total += country["requests"]);
-	last30days_countries.forEach((country) => last30days_total += country["requests"]);
-
+	io.emit("update domain request info", domain_request_info);
 	// console.log("stored domain request info");
 }
-
-function get_domain_request_info() {
-	return [
-		today_total,
-		last7days_total,
-		last30days_total,
-		today_countries,
-		last7days_countries,
-		last30days_countries
-	];
+function cycle_update(io) {
+	setInterval(() => update(io).catch((err) => console.error(err)), 30000);
 }
 
-module.exports.store_domain_request_info = store_domain_request_info;
-module.exports.get_domain_request_info = get_domain_request_info;
+let countdown = 30;
+function cycle_countdown(io) {
+	setInterval(() => {
+		io.emit("update countdown", countdown--);
+		if (countdown == 0) {
+			countdown = 30;
+			// console.log("countdown reset");
+		}
+	}, 1000);
+}
+
+module.exports.domain_request_info = domain_request_info;
+module.exports.update = update;
+module.exports.cycle_update = cycle_update;
+module.exports.cycle_countdown = cycle_countdown;

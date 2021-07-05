@@ -1,9 +1,8 @@
-const run_config = ((process.argv[0].slice(0, 13) == "/home/j9108c/") ? "dev" : "prod");
-console.log(run_config);
 const project_root = process.cwd();
-console.log(project_root);
+const run_config = (project_root.toLowerCase().slice(0, 20) == "/mnt/c/users/j9108c/" ? "dev" : "prod");
+console.log(`${run_config}: ${project_root}`);
 
-const secrets = ((run_config == "dev") ? require(`${project_root}/_secrets.js`).dev : require(`${project_root}/_secrets.js`).prod);
+const secrets = (run_config == "dev" ? require(`${project_root}/_secrets.js`).dev : require(`${project_root}/_secrets.js`).prod);
 const sql_operations = require(`${project_root}/model/sql_operations.js`);
 const cloudflare_stats = require(`${project_root}/model/cloudflare_stats.js`);
 
@@ -14,34 +13,20 @@ const socket_io = require("socket.io");
 const axios = require("axios");
 
 sql_operations.connect_to_db().then(() => sql_operations.init_db()).catch((err) => console.error(err));
-
-let stats = null;
-cloudflare_stats.store_domain_request_info().then(() => stats = cloudflare_stats.get_domain_request_info()).catch((err) => console.error(err));
-
-let countdown = 30;
-setInterval(() => {
-	io.emit("update countdown", countdown-=1);
-	if (countdown == 0) {
-		countdown = 30;
-		// console.log("countdown reset");
-	}
-}, 1000);
-setInterval(async () => {
-	try {
-		await cloudflare_stats.store_domain_request_info();
-		stats = cloudflare_stats.get_domain_request_info();
-		io.emit("update domain request info", stats);
-	} catch (err) {
-		console.error(err);
-	}
-}, 30000); // 30s
+process.nextTick(() => cloudflare_stats.update(io).then(() => {
+	cloudflare_stats.cycle_update(io);
+	cloudflare_stats.cycle_countdown(io);
+}).catch((err) => console.error(err)));
 
 const app_name = "j9108c";
-const index = ""; // index of this server relative to domain. use as project root for non-html static file links in hbs html
+const index = ""; // index of this server relative to domain
 
 const app = express();
 const server = http.createServer(app);
-const io = socket_io(server, {path: `${index}/socket.io`});
+const io = socket_io(server, {
+	path: `${index}/socket.io`
+});
+
 app.use(`${index}/static`, express.static(`${project_root}/static`));
 app.set("views", `${project_root}/static/html`);
 app.set("view engine", "handlebars");
@@ -72,11 +57,10 @@ app.get(`${index}/stats`, (req, res) => {
 });
 
 io.on("connect", async (socket) => {
-	io.to(socket.id).emit("update countdown", countdown);
-	if (stats) {
-		io.to(socket.id).emit("update domain request info", stats);
+	if (Object.keys(cloudflare_stats.domain_request_info).length != 0) {
+		io.to(socket.id).emit("update domain request info", cloudflare_stats.domain_request_info);
 	} else {
-		setTimeout(() => ((stats) ? io.to(socket.id).emit("update domain request info", stats) : null), 5000);
+		setTimeout(() => (Object.keys(cloudflare_stats.domain_request_info).length != 0 ? io.to(socket.id).emit("update domain request info", cloudflare_stats.domain_request_info) : null), 5000);
 	}
 
 	const headers = socket.handshake.headers;
@@ -91,13 +75,12 @@ io.on("connect", async (socket) => {
 		console.log(`socket (${socket.id}) connected`);
 
 		const socket_address = headers.host.split(":")[0];
-		((socket_address == secrets.dev_private_ip) ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
+		(socket_address == secrets.dev_private_ip ? io.to(socket.id).emit("replace localhost with dev private ip", secrets.dev_private_ip) : null);
 
 		sql_operations.add_visit().catch((err) => console.error(err));
 
 		const urlpath = headers.referer.split(headers.host).pop();
 		// console.log(urlpath);
-		// conditional based on urlpath (i.e., everything in the url after the domain) prefixes rather than exact urlpath. this is to account for sites adding their own queries to the url, like fb does with their "?fbclid"
 		if (urlpath.startsWith("/apps")) {
 			null;
 		} else if (urlpath.startsWith("/stats")) {
@@ -112,7 +95,7 @@ io.on("connect", async (socket) => {
 				if ("x-forwarded-for" in headers) { // from nginx reverse proxy
 					ip = headers["x-forwarded-for"].split(", ")[0];
 				} else {
-					ip = ((socket.handshake.address.slice(0, 7) == "::ffff:") ? socket.handshake.address.split(":").pop() : socket.handshake.address);
+					ip = (socket.handshake.address.slice(0, 7) == "::ffff:" ? socket.handshake.address.split(":").pop() : socket.handshake.address);
 				}
 			}
 			// console.log(ip);

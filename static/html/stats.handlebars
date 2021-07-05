@@ -1,12 +1,14 @@
 <div class="mt-5 px-5">
 	<span>
-		<a href="{{{hosts.[1025]}}}">index</a>
+		<a href="{{{index}}}">index</a>
 		<span class="consolas mx-1">/</span>
-		<a href="{{{hosts.[1025]}}}/apps">apps</a>
+		<a href="{{{index}}}/apps">apps</a>
 		<span class="consolas mx-1">/</span>
 		<div class="btn-group dropright">
-			<button type="button" class="btn btn-link dropdown-toggle px-1 py-0" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+			<button id="dropright_btn" type="button" class="btn btn-link dropdown-toggle px-1 py-0" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
 			<div id="dropright_menu" class="dropdown-menu px-2 py-0">
+				<a href="{{{hosts.[3000]}}}/apps/eternity">eternity</a>
+				<div class="dropdown-divider m-0"></div>
 				<a href="{{{hosts.[2000]}}}/apps/dark-mode-pdf">dark-mode-pdf</a>
 			</div>
 		</div>
@@ -18,7 +20,7 @@
 		<h2 class="text-center mt-1 mb-0">domain requests</h2>
 		<h6 class="text-center mt-1">(realtime data from cloudflare graphql analytics api)</h6>
 		<h4 class="text-center mt-1 mb-0">updates in <span class="countdown_wrapper"></span> seconds</h4>
-		<h3 class="mt-4">today (UTC): <span class="today_total_wrapper"></span></h3>
+		<h3 class="mt-4">last 24 hours (UTC): <span class="last24hours_total_wrapper"></span></h3>
 		<table class="table table-bordered table-hover table-dark text-center mt-0">
 			<thead>
 				<tr>
@@ -27,7 +29,7 @@
 					<th>requests</th>
 				</tr>
 			</thead>
-			<tbody id="today_table_body_wrapper"></tbody>
+			<tbody id="last24hours_table_body_wrapper"></tbody>
 		</table>
 		<h3 class="mt-5">last 7 days (UTC): <span class="last7days_total_wrapper"></span></h3>
 		<table class="table table-bordered table-hover table-dark text-center mt-0">
@@ -54,5 +56,5 @@
 	</div>
 </div>
 <div class="mt-1">
-	<span>&#169; 2021 <b class="pipe">|</b> hosted on digitalocean with nginx reverse proxy <b class="pipe">|</b> <a class="boxed px-1" href="{{{hosts.[1025]}}}/stats">stats</a> <b class="pipe">|</b> <a href="mailto:j9108c@outlook.com">contact</a></span>
+	<span>&#169; 2021 <b class="pipe">|</b> hosted on digitalocean with nginx reverse proxy <b class="pipe">|</b> <a class="boxed px-1" href="{{{index}}}/stats">stats</a> <b class="pipe">|</b> <a href="mailto:j9108c@outlook.com">contact</a></span>
 </div>
