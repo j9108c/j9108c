@@ -19,15 +19,15 @@ process.nextTick(() => cloudflare_stats.update(io).then(() => {
 }).catch((err) => console.error(err)));
 
 const app_name = "j9108c";
-const index = ""; // index of this server relative to domain
+const app_index = ""; // index of this server relative to domain
 
 const app = express();
 const server = http.createServer(app);
 const io = socket_io(server, {
-	path: `${index}/socket.io`
+	path: `${app_index}/socket.io`
 });
 
-app.use(`${index}/static`, express.static(`${project_root}/static`));
+app.use(`${app_index}/static`, express.static(`${project_root}/static`));
 app.set("views", `${project_root}/static/html`);
 app.set("view engine", "handlebars");
 app.engine("handlebars", express_hbs({
@@ -35,21 +35,21 @@ app.engine("handlebars", express_hbs({
 	defaultLayout: "template.handlebars"
 }));
 
-app.get(index, (req, res) => {
+app.get(app_index, (req, res) => {
 	res.render("index.handlebars", {
 		title: "dev portfolio — j9108c",
 		description: "dev portfolio"
 	});
 });
 
-app.get(`${index}/apps`, (req, res) => {
+app.get(`${app_index}/apps`, (req, res) => {
 	res.render("apps.handlebars", {
 		title: "apps — j9108c",
 		description: "apps"
 	});
 });
 
-app.get(`${index}/stats`, (req, res) => {
+app.get(`${app_index}/stats`, (req, res) => {
 	res.render("stats.handlebars", {
 		title: "stats — j9108c",
 		description: "stats"
@@ -139,7 +139,7 @@ if (run_config == "dev") {
 
 // set app local vars (auto passed as data to all hbs renders)
 app.locals.hosts = hosts;
-app.locals.index = index;
+app.locals.app_index = app_index;
 app.locals.repo = `https://github.com/j9108c/${app_name}`;
 app.locals.current_year = new Date().getFullYear();
 

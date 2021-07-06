@@ -1,6 +1,6 @@
-let index = null;
+let app_index = null;
 const socket = io({ // triggers server's io.on connect
-	path: `${index = document.getElementById("index").getAttribute("content")}/socket.io`
+	path: `${app_index = document.getElementById("app_index").getAttribute("content")}/socket.io`
 });
 
 const dropdown_btn = document.getElementById("dropdown_btn");
